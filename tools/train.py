@@ -1,4 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import sys
+sys.path.append('./')
+
 import argparse
 import logging
 import os

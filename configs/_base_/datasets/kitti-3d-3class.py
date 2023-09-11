@@ -1,4 +1,8 @@
 # dataset settings
+"""
+KITTI数据集的配置
+数据集类别;路径;类别名称;点云的空间范围;输入的模态(只有lidar);metainfo暂时不知道是干嘛的
+"""
 dataset_type = 'KittiDataset'
 data_root = 'data/kitti/'
 class_names = ['Pedestrian', 'Cyclist', 'Car']
@@ -21,6 +25,10 @@ metainfo = dict(classes=class_names)
 #      }))
 backend_args = None
 
+"""
+db_sampler用于:
+kitti_dbinfos_train.pkl标注文件的读取
+"""
 db_sampler = dict(
     data_root=data_root,
     info_path=data_root + 'kitti_dbinfos_train.pkl',
@@ -39,14 +47,14 @@ db_sampler = dict(
     backend_args=backend_args)
 
 train_pipeline = [
-    dict(
+    dict(                           # 读取点云文件 x,y,z,intensity分别是点在求坐标中的位置和反射强度
         type='LoadPointsFromFile',
         coord_type='LIDAR',
         load_dim=4,  # x, y, z, intensity
         use_dim=4,
         backend_args=backend_args),
-    dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True),
-    dict(type='ObjectSample', db_sampler=db_sampler),
+    dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True), # 读取标注文件
+    dict(type='ObjectSample', db_sampler=db_sampler),   # ObjectSample以下都是数据增强
     dict(
         type='ObjectNoise',
         num_try=100,
@@ -61,6 +69,7 @@ train_pipeline = [
     dict(type='PointsRangeFilter', point_cloud_range=point_cloud_range),
     dict(type='ObjectRangeFilter', point_cloud_range=point_cloud_range),
     dict(type='PointShuffle'),
+    # 数据增强结束 最后将点云数据进行打包
     dict(
         type='Pack3DDetInputs',
         keys=['points', 'gt_bboxes_3d', 'gt_labels_3d'])
@@ -101,7 +110,7 @@ eval_pipeline = [
     dict(type='Pack3DDetInputs', keys=['points'])
 ]
 train_dataloader = dict(
-    batch_size=6,
+    batch_size=6,                   # 设置batch大小和workers个数
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -110,11 +119,11 @@ train_dataloader = dict(
         times=2,
         dataset=dict(
             type=dataset_type,
-            data_root=data_root,
-            ann_file='kitti_infos_train.pkl',
-            data_prefix=dict(pts='training/velodyne_reduced'),
-            pipeline=train_pipeline,
-            modality=input_modality,
+            data_root=data_root,                # 数据集路径
+            ann_file='kitti_infos_train.pkl',   # 标注文件
+            data_prefix=dict(pts='training/velodyne_reduced'), # 点云文件路径
+            pipeline=train_pipeline,    # train_pipline负责读取点云和标注文件以及一些数据增强操作,具体看前面的config
+            modality=input_modality,    # 输入的模态
             test_mode=False,
             metainfo=metainfo,
             # we use box_type_3d='LiDAR' in kitti and nuscenes dataset

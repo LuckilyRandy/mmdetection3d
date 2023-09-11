@@ -173,6 +173,7 @@ def create_groundtruth_database(dataset_class_name,
         dataset_cfg.update(
             use_valid_flag=True,
             data_prefix=dict(
+                # pts='samples/LIDAR_TOP', img='', sweeps='sweeps/LIDAR_TOP'),
                 pts='samples/LIDAR_TOP', img='', sweeps='sweeps/LIDAR_TOP'),
             pipeline=[
                 dict(
@@ -288,6 +289,7 @@ def create_groundtruth_database(dataset_class_name,
                 gt_boxes, gt_masks, mask_inds, annos['img'])
 
         for i in range(num_obj):
+            print(i)
             filename = f'{image_idx}_{names[i]}_{i}.bin'
             abs_filepath = osp.join(database_save_path, filename)
             rel_filepath = osp.join(f'{info_prefix}_gt_database', filename)
